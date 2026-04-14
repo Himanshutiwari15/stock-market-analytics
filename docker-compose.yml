@@ -1,0 +1,278 @@
+# =============================================================
+# docker-compose.yml — Service Orchestration
+# =============================================================
+# Docker Compose is a tool for defining and running multi-container
+# applications. Instead of running "docker run ..." commands manually
+# for each service, you describe everything in this file and run:
+#   docker compose up
+#
+# WHY Docker Compose over plain Docker?
+#   - One command starts everything (app + database + monitoring)
+#   - Services can refer to each other by name (e.g. "postgres")
+#     instead of by IP address (which changes every restart)
+#   - Networks, volumes, and environment are all declared here
+#   - Easy to reproduce on any machine: git clone + docker compose up
+#
+# HOW environment variables work here:
+#   Docker Compose automatically reads .env from the same directory.
+#   Variables like ${POSTGRES_PASSWORD} are substituted at runtime.
+#   This means secrets never appear in this file — they stay in .env.
+#
+# PHASES: We expand this file as we progress:
+#   Phase 3: postgres only (this file)
+#   Phase 5: add app container
+#   Phase 6: add grafana
+#   Phase 7: add prometheus
+# =============================================================
+
+services:
+
+  # -----------------------------------------------------------
+  # PostgreSQL — The database
+  # -----------------------------------------------------------
+  postgres:
+    # Always pin image versions — never use "postgres:latest".
+    # "latest" means a major version upgrade could silently break
+    # your application next time someone runs docker compose pull.
+    # postgres:15-alpine = PostgreSQL 15 on Alpine Linux (tiny image, ~80MB).
+    image: postgres:15-alpine
+    container_name: stock_postgres
+
+    # Environment variables configure the PostgreSQL process.
+    # The ${VAR:-default} syntax: use the env var, or "default" if not set.
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-stockmarket}
+      POSTGRES_USER:     ${POSTGRES_USER:-stockuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    # Volumes serve two purposes here:
+    #   1. postgres_data: named volume that persists DB data between restarts.
+    #      Without this, every "docker compose down" would wipe your database.
+    #   2. init.sql bind mount: runs our schema on first boot.
+    #      The /docker-entrypoint-initdb.d/ directory is special — Postgres
+    #      executes every .sql file there when it initialises a fresh database.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+    # Expose port 5432 to your local machine (host:container).
+    # This lets you connect from Python running locally (not in Docker yet)
+    # and from tools like DBeaver or pgAdmin for debugging.
+    # In production, you would NOT expose this port publicly.
+    ports:
+      - "5432:5432"
+
+    # Health check: Docker uses this to know when Postgres is actually
+    # ready to accept connections (not just "started").
+    # Other services can declare "depends_on: postgres: condition: service_healthy"
+    # so they wait for Postgres to be ready before starting.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stockuser} -d ${POSTGRES_DB:-stockmarket}"]
+      interval: 10s   # check every 10 seconds
+      timeout: 5s     # fail the check if it takes more than 5 seconds
+      retries: 5      # mark unhealthy after 5 consecutive failures
+      start_period: 10s  # give Postgres 10s to start before checking
+
+    # Restart policy: if Postgres crashes, restart it automatically.
+    # "unless-stopped" = restart always, except when you explicitly stop it.
+    restart: unless-stopped
+
+    # Attach to the shared internal network.
+    # Even though Postgres is also reachable on host port 5432 (for local
+    # dev tools like DBeaver), services inside Docker use this network.
+    networks:
+      - stock_network
+
+  # -----------------------------------------------------------
+  # App (Python ETL pipeline) — Phase 5
+  # -----------------------------------------------------------
+  app:
+    # Build the image from our Dockerfile.
+    # context: .  →  Docker sends the PROJECT ROOT as the build context.
+    #   This lets the Dockerfile do "COPY requirements.txt ." and
+    #   "COPY src/ ./src/" — both paths exist at the project root.
+    # dockerfile: →  where to find the Dockerfile within that context.
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: stock_app
+
+    # Wait for Postgres to pass its health check before starting.
+    # WHY? Without this, the app could start, attempt a DB connection
+    # while Postgres is still initialising (running init.sql), fail,
+    # and crash — even though Postgres would be ready a few seconds later.
+    # "service_healthy" means Docker confirmed pg_isready returned OK,
+    # so the DB schema is in place and connections are accepted.
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    # Environment variables injected into the container at runtime.
+    # These come from your .env file (Docker Compose reads it automatically).
+    #
+    # CRITICAL — POSTGRES_HOST:
+    #   When Python runs on YOUR machine, it connects to Postgres via
+    #   localhost:5432 (the port-forwarded from Docker).
+    #   When Python runs INSIDE Docker, "localhost" refers to the app
+    #   container itself — not to Postgres.
+    #   Docker's internal DNS resolves service names: "postgres" routes
+    #   to the postgres container automatically. We hard-code it here
+    #   so the app container always finds the database, regardless of
+    #   what POSTGRES_HOST is set to in your .env file.
+    environment:
+      POSTGRES_HOST:          postgres   # Docker service name — NOT localhost
+      POSTGRES_PORT:          ${POSTGRES_PORT:-5432}
+      POSTGRES_DB:            ${POSTGRES_DB:-stockmarket}
+      POSTGRES_USER:          ${POSTGRES_USER:-stockuser}
+      POSTGRES_PASSWORD:      ${POSTGRES_PASSWORD}
+      STOCK_SYMBOLS:          ${STOCK_SYMBOLS:-AAPL,GOOGL,MSFT,TSLA}
+      FETCH_INTERVAL_SECONDS: ${FETCH_INTERVAL_SECONDS:-60}
+      LOG_LEVEL:              ${LOG_LEVEL:-INFO}
+
+    # Restart the container if it exits for any reason (crash, OOM, etc.).
+    # Combined with depends_on + service_healthy, this creates a resilient
+    # startup: if Postgres takes longer than the health-check window,
+    # the app container will restart until the DB is ready.
+    # Expose port 8000 so Prometheus can scrape /metrics.
+    # host:container — also accessible from your browser at:
+    #   http://localhost:8000/metrics  (raw Prometheus text format)
+    ports:
+      - "8000:8000"
+
+    restart: unless-stopped
+
+    # Attach to the shared internal network.
+    # The app finds Postgres by the name "postgres" (Docker DNS).
+    networks:
+      - stock_network
+
+  # -----------------------------------------------------------
+  # Grafana (dashboards) — Phase 6
+  # -----------------------------------------------------------
+  grafana:
+    # Grafana OSS 10.3.1 — pinned, not "latest".
+    # OSS = Open Source. The free edition is all we need.
+    image: grafana/grafana:10.3.1
+    container_name: stock_grafana
+
+    # Grafana needs Postgres to already be running so its datasource
+    # can connect on first startup. Same pattern as the app service.
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    # Port 3000 is Grafana's default web UI port.
+    # After "docker compose up", open: http://localhost:3000
+    ports:
+      - "3000:3000"
+
+    # Environment variables configure Grafana itself AND are available
+    # to the datasource provisioning file (postgres.yml), which uses
+    # ${POSTGRES_HOST}, ${POSTGRES_USER}, etc. to build the connection string.
+    environment:
+      # Grafana admin credentials — login at http://localhost:3000
+      GF_SECURITY_ADMIN_USER:     admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
+
+      # Disable anonymous access — require login.
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+
+      # Pass DB connection details so datasource provisioning can use them.
+      # The datasource file (postgres.yml) reads ${POSTGRES_HOST} etc.
+      POSTGRES_HOST:     postgres
+      POSTGRES_PORT:     ${POSTGRES_PORT:-5432}
+      POSTGRES_DB:       ${POSTGRES_DB:-stockmarket}
+      POSTGRES_USER:     ${POSTGRES_USER:-stockuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    volumes:
+      # Mount our provisioning configs into the path Grafana reads on startup.
+      # :ro = read-only — the container cannot write back to our source files.
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+
+      # Mount our dashboard JSON files into the path the provider scans.
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+      # Named volume for Grafana's own state (user sessions, alert rules, etc.).
+      # Without this, every restart resets Grafana's internal database.
+      - grafana_data:/var/lib/grafana
+
+    restart: unless-stopped
+
+    networks:
+      - stock_network
+
+  # -----------------------------------------------------------
+  # Prometheus (metrics scraper) — Phase 7
+  # -----------------------------------------------------------
+  prometheus:
+    # prom/prometheus:v2.49.1 — pinned. Not "latest".
+    image: prom/prometheus:v2.49.1
+    container_name: stock_prometheus
+
+    # Port 9090 is Prometheus's default web UI port.
+    # After "docker compose up", open: http://localhost:9090
+    # Type a metric name (e.g. pipeline_up) and click "Execute".
+    ports:
+      - "9090:9090"
+
+    volumes:
+      # Mount our scrape config into the location Prometheus expects.
+      # :ro = read-only — Prometheus should never write back to our config.
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+      # Named volume for Prometheus's time-series database (TSDB).
+      # Without this, all historical metric data is lost on container restart.
+      - prometheus_data:/prometheus
+
+    # Override the default startup command to explicitly point at our config.
+    # These are standard Prometheus flags — safe to leave as-is.
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"   # allows config reload via HTTP POST (no restart needed)
+
+    restart: unless-stopped
+
+    networks:
+      - stock_network
+
+
+# -----------------------------------------------------------
+# Named volumes
+# -----------------------------------------------------------
+# Named volumes are managed by Docker and persist between
+# "docker compose down" calls. They are only deleted when you
+# explicitly run "docker compose down -v" (the -v flag).
+# This protects your data from accidental deletion.
+volumes:
+  postgres_data:
+    name: stock_postgres_data
+
+  # Grafana's internal SQLite database (stores sessions, alert rules, etc.)
+  # Persists across "docker compose down" so you don't lose Grafana settings.
+  grafana_data:
+    name: stock_grafana_data
+
+  # Prometheus's time-series database (TSDB).
+  # Stores all scraped metric values. Prometheus compacts old data automatically.
+  prometheus_data:
+    name: stock_prometheus_data
+
+
+# -----------------------------------------------------------
+# Networks
+# -----------------------------------------------------------
+# Docker Compose creates a virtual network that lets containers
+# find each other by their SERVICE NAME (e.g. host="postgres").
+# This is different from the default auto-generated network:
+#   - The name is predictable (stock_network) across rebuilds.
+#   - We can attach new services (Grafana, Prometheus) in later phases
+#     simply by adding "networks: - stock_network" to their config.
+#   - If you ever need to isolate services (e.g., Grafana shouldn't
+#     reach the app directly), you can use multiple networks.
+networks:
+  stock_network:
+    name: stock_network

@@ -1,0 +1,125 @@
+# =============================================================
+# .gitignore — Real-Time Stock Market Analytics Platform
+# =============================================================
+# This file tells git which files and folders to NEVER track.
+# The most important entry is .env — it holds your passwords.
+# If .env ever gets committed to a public GitHub repo, your
+# credentials are exposed to the entire internet. That entry
+# is intentional and must never be removed.
+# =============================================================
+
+# --- SECRETS (CRITICAL — do not remove) ---
+.env
+*.env
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.pyc
+
+# --- Virtual environments ---
+# These are local to your machine and should never be committed.
+# Everyone creates their own with: python -m venv venv
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+virtualenv/
+
+# --- Testing and coverage ---
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+*.py,cover
+htmlcov/
+nosetests.xml
+pytest.xml
+
+# --- Linting / code quality ---
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints/
+*.ipynb
+
+# --- Docker ---
+# Docker Desktop writes internal state files — we don't need these
+.docker/
+
+# --- Terraform ---
+# .terraform/ contains downloaded providers (huge, machine-specific)
+# *.tfstate contains live infrastructure state (may contain secrets)
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfplan
+# Allow example tfvars but not real ones (which may have secrets)
+*.tfvars
+!*.tfvars.example
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+*.sublime-project
+*.sublime-workspace
+
+# --- OS generated ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- Logs ---
+*.log
+logs/
+log/
+
+# --- Build artifacts ---
+*.tar.gz
+*.zip
+*.whl
+
+# --- Security scan output ---
+bandit-report.json
+safety-report.json

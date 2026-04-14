@@ -1,0 +1,166 @@
+# =============================================================
+# .github/workflows/ci.yml — Continuous Integration Pipeline
+# =============================================================
+# WHAT IS GITHUB ACTIONS?
+#   GitHub Actions is a CI/CD platform built into GitHub.
+#   "CI" = Continuous Integration: every time you push code,
+#   GitHub automatically runs a series of checks on it.
+#   If any check fails, GitHub marks the commit/PR with a red ✗.
+#   If all pass, it shows a green ✓.
+#
+# HOW IT WORKS:
+#   1. You push a commit to GitHub.
+#   2. GitHub reads this file and creates a "workflow run".
+#   3. It spins up a fresh Ubuntu virtual machine in the cloud.
+#   4. It executes the steps defined below, in order.
+#   5. Results appear under the "Actions" tab of your repo.
+#
+# WHY THIS MATTERS FOR YOUR CV:
+#   CI proves your code isn't just "works on my machine".
+#   Recruiters and reviewers can see a green badge in your README
+#   and know the tests pass on a neutral, clean environment.
+#   It also means you can't accidentally push broken code —
+#   GitHub will flag it immediately.
+#
+# FILE STRUCTURE:
+#   on:    → what events trigger this workflow
+#   env:   → environment variables available to all steps
+#   jobs:  → what to run (we have one job: "ci")
+#   steps: → the individual commands within that job
+# =============================================================
+
+name: CI  # Name shown in the GitHub Actions UI
+
+# -------------------------------------------------------
+# Triggers — when does this workflow run?
+# -------------------------------------------------------
+on:
+  # Run on every push to the main branch.
+  # "main" is your primary branch — always keep it green.
+  push:
+    branches: [main]
+
+  # Run on every pull request that targets main.
+  # This checks the code BEFORE it is merged — the right time to catch bugs.
+  pull_request:
+    branches: [main]
+
+# -------------------------------------------------------
+# Environment variables
+# -------------------------------------------------------
+# These are available to every step in every job.
+# They satisfy config.py's os.environ.get() calls without
+# needing a real .env file on the CI server.
+#
+# NOTE ON DATABASE TESTS:
+#   test_database.py uses SQLite in-memory (no PostgreSQL needed).
+#   test_pipeline.py mocks the database session entirely.
+#   So these POSTGRES_* values are never used to make a real
+#   connection — they just prevent "missing env var" log warnings.
+env:
+  POSTGRES_HOST:          localhost
+  POSTGRES_PORT:          "5432"
+  POSTGRES_DB:            stockmarket_test
+  POSTGRES_USER:          stockuser
+  POSTGRES_PASSWORD:      ci_dummy_password   # not a real secret — no DB runs in CI
+  STOCK_SYMBOLS:          AAPL,MSFT
+  FETCH_INTERVAL_SECONDS: "60"
+  LOG_LEVEL:              WARNING             # suppress INFO noise in CI output
+
+# -------------------------------------------------------
+# Jobs — units of work that run (potentially in parallel)
+# -------------------------------------------------------
+jobs:
+  ci:
+    # Human-readable name shown in the GitHub UI next to the ✓ or ✗
+    name: "Lint · Test · Security"
+
+    # runs-on: the operating system of the CI runner.
+    # ubuntu-latest = latest Ubuntu LTS, free for public repos.
+    # We use Linux (not Windows) in CI because:
+    #   - It matches the Docker image (python:3.12-slim is Debian/Linux)
+    #   - Linux runners are faster and cheaper than Windows on GitHub
+    #   - Most production servers run Linux
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ---------------------------------------------------------
+      # Step 1: Get the code
+      # ---------------------------------------------------------
+      # actions/checkout downloads your repository onto the runner.
+      # Without this, no files exist and nothing can run.
+      # @v4 pins to the v4 major version of this action.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------
+      # Step 2: Install the right Python version
+      # ---------------------------------------------------------
+      # actions/setup-python installs Python and configures pip.
+      # cache: "pip" caches pip's downloaded packages between runs.
+      #   HOW CACHING WORKS:
+      #     First run: pip downloads all packages (~60s), saves to cache.
+      #     Subsequent runs: pip restores from cache (~5s).
+      #     Cache is invalidated when requirements.txt changes.
+      #   This makes CI much faster after the first run.
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # ---------------------------------------------------------
+      # Step 3: Install Python packages
+      # ---------------------------------------------------------
+      # pip install -r requirements.txt installs every pinned package.
+      # Pinned versions guarantee the same packages as your local machine.
+      # --quiet suppresses per-package download noise in the CI log.
+      - name: Install dependencies
+        run: pip install --quiet -r requirements.txt
+
+      # ---------------------------------------------------------
+      # Step 4: Lint with ruff
+      # ---------------------------------------------------------
+      # ruff check scans for code style issues, unused imports, etc.
+      # It exits with code 1 if any issues are found → CI step fails.
+      # This runs BEFORE tests because a linting failure is fast to
+      # detect and fix, and there's no point running slow tests on
+      # code that doesn't even pass basic style checks.
+      - name: "Lint — ruff"
+        run: ruff check src/ tests/
+
+      # ---------------------------------------------------------
+      # Step 5: Run the test suite
+      # ---------------------------------------------------------
+      # pytest discovers and runs all tests in tests/.
+      # -v:        verbose — shows each test name as it runs
+      # --tb=short: shorter tracebacks on failure (easier to read in CI logs)
+      #
+      # WHAT THE TESTS NEED:
+      #   test_database.py  → SQLite in-memory (no real DB)
+      #   test_pipeline.py  → mocked DB session + mocked Yahoo Finance
+      #   test_fetcher.py   → mocked Yahoo Finance API
+      #   All tests pass without a running Docker stack.
+      - name: "Test — pytest"
+        run: pytest tests/ -v --tb=short
+
+      # ---------------------------------------------------------
+      # Step 6: Security scan with bandit
+      # ---------------------------------------------------------
+      # bandit scans Python source code for common vulnerabilities:
+      #   - Hardcoded passwords
+      #   - SQL injection patterns
+      #   - Use of insecure functions (eval, exec, pickle)
+      #   - Weak cryptography
+      # -r src/: scan the src/ directory recursively
+      # -c .bandit: use our project-specific bandit configuration
+      #
+      # NOTE ON SAFETY (CVE checker):
+      #   safety==3.x requires a free account (safety auth login).
+      #   Running it in CI without credentials fails.
+      #   To add it later: create a free account at safety.pypa.io,
+      #   add SAFETY_API_KEY as a GitHub secret, then add:
+      #     run: safety scan -r requirements.txt --key ${{ secrets.SAFETY_API_KEY }}
+      - name: "Security — bandit"
+        run: bandit -r src/ -c .bandit

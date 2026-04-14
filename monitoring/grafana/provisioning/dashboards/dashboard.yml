@@ -1,0 +1,49 @@
+# =============================================================
+# monitoring/grafana/provisioning/dashboards/dashboard.yml
+# =============================================================
+# WHAT THIS FILE DOES:
+#   This is the "dashboard provider" — it tells Grafana WHERE to look
+#   for dashboard JSON files and HOW to load them.
+#
+#   Think of it as a loader, not the actual dashboard.
+#   The actual dashboard (charts, queries, panels) is in:
+#     monitoring/grafana/dashboards/stock_prices.json
+#
+#   This file says: "scan /var/lib/grafana/dashboards/ for JSON files
+#   and import them as dashboards."
+#
+# FILE FLOW:
+#   docker-compose.yml mounts:
+#     ./monitoring/grafana/provisioning → /etc/grafana/provisioning  (this file's home)
+#     ./monitoring/grafana/dashboards   → /var/lib/grafana/dashboards (dashboard JSONs)
+#   Grafana reads this file → finds /var/lib/grafana/dashboards → imports stock_prices.json
+# =============================================================
+
+apiVersion: 1
+
+providers:
+  - name: StockDashboards      # Internal name for this provider (shown in Grafana logs)
+    orgId: 1                   # Organization ID (1 = default org in fresh Grafana)
+    folder: "Stock Market"     # Dashboard folder name in the Grafana UI
+    type: file                 # Load dashboards from the filesystem
+
+    # disableDeletion: false
+    #   If you delete a dashboard JSON file, Grafana removes that dashboard.
+    #   Set to true if you want to keep dashboards even after removing the file.
+    disableDeletion: false
+
+    # updateIntervalSeconds: how often Grafana re-reads the JSON files.
+    # 30 seconds means changes to stock_prices.json appear in Grafana
+    # within 30 seconds without restarting the container.
+    updateIntervalSeconds: 30
+
+    # allowUiUpdates: true lets you edit the dashboard in the Grafana UI.
+    # Changes made in the UI are NOT saved back to the JSON file.
+    # To persist UI changes: export the dashboard JSON from the UI and
+    # overwrite stock_prices.json.
+    allowUiUpdates: true
+
+    options:
+      # path: where Grafana looks for dashboard JSON files.
+      # This must match the volume mount target in docker-compose.yml.
+      path: /var/lib/grafana/dashboards

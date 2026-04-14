@@ -1,0 +1,60 @@
+# =============================================================
+# monitoring/grafana/provisioning/datasources/postgres.yml
+# =============================================================
+# WHAT IS GRAFANA PROVISIONING?
+#   Normally you configure Grafana by clicking through its web UI.
+#   Provisioning lets you do that via config files instead.
+#   When Grafana starts, it reads every file in:
+#     /etc/grafana/provisioning/datasources/
+#   and automatically creates the data sources defined there.
+#
+# WHY PROVISION instead of clicking through the UI?
+#   - Reproducible: git clone + docker compose up → fully configured.
+#   - No manual steps: an interviewer can run your project instantly.
+#   - Version-controlled: changes to the datasource are in git history.
+#
+# HOW ENVIRONMENT VARIABLES WORK HERE:
+#   Grafana substitutes ${VAR_NAME} with the value of the environment
+#   variable VAR_NAME at startup. The variables come from the
+#   "environment:" section of the grafana service in docker-compose.yml.
+#
+# DATASOURCE UID:
+#   We give this datasource the uid "stock-postgres".
+#   The dashboard JSON references this uid to say "use THIS datasource".
+#   This is how Grafana wires the dashboard to the database.
+# =============================================================
+
+apiVersion: 1
+
+datasources:
+  - name: StockPostgres          # Display name in the Grafana UI
+    uid: stock-postgres           # Stable ID referenced by dashboard panels
+    type: postgres                # Grafana's built-in PostgreSQL plugin
+    url: ${POSTGRES_HOST}:${POSTGRES_PORT}   # host:port inside Docker
+
+    # Database credentials
+    user: ${POSTGRES_USER}
+    jsonData:
+      database: ${POSTGRES_DB}
+
+      # sslmode: disable is correct for an internal Docker network.
+      # In production (internet-facing), use sslmode: require.
+      sslmode: disable
+
+      # Tell Grafana we're using PostgreSQL 15.
+      # Format: major_version * 100 (15 → 1500, 14 → 1400, etc.)
+      postgresVersion: 1500
+
+      # timescaledb: false — we're using plain PostgreSQL, not TimescaleDB.
+      # TimescaleDB is a PostgreSQL extension for time-series at scale.
+      # Our data volume doesn't need it, but the option is here if you
+      # ever want to add it later.
+      timescaledb: false
+
+    # Passwords and tokens go in secureJsonData so Grafana stores them
+    # encrypted in its internal database, never in plain text.
+    secureJsonData:
+      password: "${POSTGRES_PASSWORD}"
+
+    isDefault: true   # Make this the default datasource for new panels
+    editable: true    # Allow editing via the UI (useful during development)

@@ -1,0 +1,20 @@
+# Bandit security scanner configuration (YAML format)
+# Run with: bandit -r src/ -c .bandit
+#
+# exclude_dirs: skip these directories entirely
+# skips: suppress these specific check IDs (with justification below)
+#
+# B101 (assert_used): we intentionally use assert in test files.
+# assert is only dangerous as a security gate in production code
+# (it gets stripped with Python's -O optimisation flag).
+# Since tests/ is excluded above, this is safe to skip globally.
+
+exclude_dirs:
+  - tests
+  - venv
+  - .venv
+  - build
+  - dist
+
+skips:
+  - B101

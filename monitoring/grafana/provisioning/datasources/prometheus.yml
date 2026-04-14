@@ -1,0 +1,35 @@
+# =============================================================
+# monitoring/grafana/provisioning/datasources/prometheus.yml
+# =============================================================
+# Provisions a Prometheus datasource in Grafana automatically.
+# Grafana reads every .yml file in /etc/grafana/provisioning/datasources/
+# at startup, so both postgres.yml AND this file are loaded.
+#
+# After this, Grafana can query Prometheus using PromQL — the same
+# query language you use at http://localhost:9090.
+#
+# The uid "stock-prometheus" is referenced by pipeline_health.json
+# so Grafana knows which datasource to use for each panel.
+# =============================================================
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus             # Display name in the Grafana UI
+    uid: stock-prometheus        # Stable ID referenced by dashboard panels
+    type: prometheus             # Grafana's built-in Prometheus plugin
+    url: http://prometheus:9090  # "prometheus" = Docker service name
+
+    # isDefault: false — PostgreSQL is the default (set in postgres.yml).
+    # Panels explicitly specify which datasource they use via the uid.
+    isDefault: false
+    editable: true
+
+    jsonData:
+      # How often Grafana queries Prometheus for new data.
+      # Match this to Prometheus's scrape_interval (15s).
+      timeInterval: "15s"
+
+      # httpMethod: POST is more efficient for complex PromQL queries
+      # (avoids URL length limits). GET works too for simple queries.
+      httpMethod: POST

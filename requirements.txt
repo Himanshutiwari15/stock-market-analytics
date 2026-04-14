@@ -1,0 +1,86 @@
+# =============================================================
+# requirements.txt — Python dependencies (pinned versions)
+# =============================================================
+# PYTHON VERSION REQUIREMENT: 3.12.x (not 3.13 or 3.14)
+# Reason: bleeding-edge Python versions lag behind on pre-built
+# binary wheels. Use: py -3.12 -m venv venv
+# =============================================================
+# WHY we pin exact versions (e.g., pandas==2.2.0 not pandas>=2.0):
+#   - Unpinned deps mean "install whatever version is latest today".
+#     In 6 months, a new version might break your code silently.
+#   - Pinning guarantees every machine (yours, CI, Docker) runs
+#     the exact same code. This is called "reproducible builds".
+#
+# HOW to install:
+#   pip install -r requirements.txt
+#
+# HOW to update a package:
+#   1. Change the version here
+#   2. Run: pip install -r requirements.txt
+#   3. Test everything still works
+#   4. Commit the updated requirements.txt
+# =============================================================
+
+# --- Data fetching ---
+# yfinance: fetches live stock/crypto data from Yahoo Finance.
+# No API key required. Returns pandas DataFrames.
+# yfinance version is not pinned tightly because Yahoo Finance's unofficial
+# API changes frequently and patches are released often. We use >= to always
+# get a working version while keeping a minimum baseline.
+yfinance>=0.2.40
+
+# --- Data processing ---
+# pandas: the standard Python library for tabular data.
+# Think of it as Excel in code — rows, columns, filters, aggregations.
+pandas==2.2.0
+
+# --- Environment / configuration ---
+# python-dotenv: loads key=value pairs from .env into os.environ.
+# This is how we keep secrets out of source code.
+python-dotenv==1.0.1
+
+# --- Database ---
+# psycopg2-binary: Python driver for PostgreSQL.
+# "binary" means it comes pre-compiled — no need to install pg libraries.
+psycopg2-binary==2.9.9
+
+# SQLAlchemy: ORM (Object-Relational Mapper) for Python.
+# Lets us define database tables as Python classes.
+SQLAlchemy==2.0.30
+
+# --- HTTP ---
+# requests: the standard Python HTTP library.
+# Used for any direct API calls and health checks.
+requests==2.32.2
+
+# --- Pipeline scheduling ---
+# APScheduler: runs Python functions on a schedule (like cron, but in Python).
+# Much simpler than Airflow for a single-machine pipeline.
+APScheduler==3.10.4
+
+# --- Monitoring / metrics ---
+# prometheus-client: exposes metrics in Prometheus format.
+# The pipeline will expose a /metrics HTTP endpoint that Prometheus scrapes.
+prometheus-client==0.20.0
+
+# --- Testing ---
+# pytest: the standard Python test runner.
+pytest==8.1.1
+
+# pytest-mock: makes it easy to mock (fake) external dependencies in tests.
+# e.g., we mock the Yahoo Finance API so tests don't need internet access.
+pytest-mock==3.14.0
+
+# --- Code quality (linting + formatting) ---
+# ruff: extremely fast Python linter and formatter.
+# It replaces flake8 (linting) + black (formatting) + isort (imports) in one tool.
+ruff==0.4.1
+
+# --- Security scanning ---
+# bandit: static analysis tool that finds common Python security vulnerabilities.
+# e.g., hardcoded passwords, SQL injection patterns, use of assert for security.
+bandit[toml]==1.7.8
+
+# safety: checks your installed packages against a database of known CVEs.
+# CVE = Common Vulnerabilities and Exposures — published security flaws.
+safety==3.1.0

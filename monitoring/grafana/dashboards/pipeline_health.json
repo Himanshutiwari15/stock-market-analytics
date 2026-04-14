@@ -1,0 +1,297 @@
+{
+  "__comment": "pipeline_health.json — Prometheus-backed pipeline health dashboard",
+  "__comment2": "All panels query Prometheus using PromQL (not SQL).",
+  "__comment3": "PromQL reference: https://prometheus.io/docs/prometheus/latest/querying/basics/",
+
+  "annotations": { "list": [] },
+  "description": "ETL pipeline health — metrics collected by Prometheus every 15 seconds",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+
+  "panels": [
+
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Pipeline Status",
+      "description": "1 = running normally. 0 = the pipeline has crashed or its last run failed. This is your primary health indicator.",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+          "expr": "pipeline_up",
+          "instant": true,
+          "legendFormat": "Status"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 1    }
+            ]
+          },
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN",    "color": "red"   } } },
+            { "type": "value", "options": { "1": { "text": "RUNNING", "color": "green" } } }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "text": { "titleSize": 14, "valueSize": 32 }
+      }
+    },
+
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Last Run Duration",
+      "description": "How long the most recent ETL cycle took. Typical range: 400–800ms. Spikes may indicate Yahoo Finance slowness or DB contention.",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+          "expr": "pipeline_last_run_duration_seconds",
+          "instant": true,
+          "legendFormat": "Duration"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "yellow", "value": 2    },
+              { "color": "red",    "value": 10   }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "text": { "titleSize": 14, "valueSize": 32 }
+      }
+    },
+
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Successful Runs (total)",
+      "description": "Cumulative count of successful pipeline runs since the container started. Resets on container restart.",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+          "expr": "pipeline_runs_total{status=\"success\"}",
+          "instant": true,
+          "legendFormat": "Runs"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "text": { "titleSize": 14, "valueSize": 32 }
+      }
+    },
+
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Records Inserted (last 5 min)",
+      "description": "How many rows were inserted into PostgreSQL in the last 5 minutes. With 4 stocks and 60s interval: expect ~20 per 5 minutes.",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+          "expr": "increase(pipeline_records_inserted_total[5m])",
+          "instant": true,
+          "legendFormat": "Records"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",    "value": null },
+              { "color": "yellow", "value": 5    },
+              { "color": "green",  "value": 15   }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "text": { "titleSize": 14, "valueSize": 32 }
+      }
+    },
+
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Run Duration Over Time",
+      "description": "How long each ETL run took. Consistent times = healthy pipeline. Spikes = worth investigating (network? DB?)",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+          "expr": "pipeline_last_run_duration_seconds",
+          "legendFormat": "Duration (s)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "showPoints": "always",
+            "pointSize": 6,
+            "spanNulls": false,
+            "axisLabel": "Seconds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [ { "color": "green", "value": null } ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "single", "sort": "none" },
+        "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }
+      }
+    },
+
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Records Inserted Per Run",
+      "description": "Records inserted in each pipeline run. Should be a flat line at 4 (one per stock). Dips to 0 = all duplicates (market closed or data unchanged). Gaps = pipeline was down.",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+          "expr": "pipeline_last_run_inserted",
+          "legendFormat": "Inserted"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "stock-prometheus" },
+          "expr": "increase(pipeline_records_skipped_total[1m])",
+          "legendFormat": "Skipped (duplicates)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "always",
+            "pointSize": 6,
+            "spanNulls": false,
+            "axisLabel": "Records"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [ { "color": "green", "value": null } ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }
+      }
+    }
+
+  ],
+
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": ["pipeline", "prometheus", "health"],
+
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["15s", "30s", "1m", "5m"]
+  },
+  "timezone": "browser",
+  "title": "Pipeline Health",
+  "uid": "pipeline-health-v1",
+  "version": 1
+}

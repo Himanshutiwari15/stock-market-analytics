@@ -1,0 +1,58 @@
+# =============================================================
+# monitoring/prometheus/prometheus.yml — Prometheus Configuration
+# =============================================================
+# WHAT IS A SCRAPE CONFIG?
+#   Prometheus works by "scraping" — it sends an HTTP GET to
+#   each target's /metrics endpoint on a schedule and stores
+#   the numbers it finds as time-series data.
+#
+#   This file tells Prometheus:
+#     1. How often to scrape (global interval)
+#     2. What to scrape (scrape_configs — list of targets)
+#
+# HOW TARGETS RESOLVE INSIDE DOCKER:
+#   "app:8000" uses Docker's internal DNS.
+#   "app" resolves to the IP of the stock_app container.
+#   This works because both containers are on stock_network.
+#   Prometheus never needs to know the actual IP — Docker handles it.
+#
+# VIEWING PROMETHEUS:
+#   After "docker compose up", open: http://localhost:9090
+#   Click "Graph" → type a metric name → click "Execute"
+#   Example queries:
+#     pipeline_up                              → is the pipeline alive?
+#     pipeline_last_run_duration_seconds       → last run time in seconds
+#     rate(pipeline_runs_total[5m])            → runs per second
+#     increase(pipeline_records_inserted_total[5m]) → records in last 5 min
+# =============================================================
+
+global:
+  # scrape_interval: how often Prometheus scrapes each target.
+  # 15s is the Prometheus default and a good balance between
+  # freshness and storage cost. For a pipeline that runs every 60s,
+  # 15s means we see 4 data points per pipeline cycle.
+  scrape_interval: 15s
+
+  # evaluation_interval: how often Prometheus evaluates alerting rules.
+  # We don't have alert rules yet (Phase 11), but it's good practice
+  # to set this equal to scrape_interval.
+  evaluation_interval: 15s
+
+scrape_configs:
+
+  # --- Prometheus scrapes itself ---
+  # Standard practice: monitor the monitor.
+  # This lets you check if Prometheus is healthy from Grafana.
+  # Metrics: prometheus_tsdb_*, prometheus_http_requests_total, etc.
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # --- Our Python ETL pipeline ---
+  # Scrapes the /metrics endpoint that prometheus_client exposes
+  # when we call start_http_server(8000) in scheduler.py.
+  # Metrics: pipeline_up, pipeline_runs_total, pipeline_last_run_duration_seconds, etc.
+  - job_name: "stock-pipeline"
+    static_configs:
+      - targets: ["app:8000"]   # "app" = Docker service name, resolves internally
+    metrics_path: "/metrics"    # Default for prometheus_client — explicit for clarity

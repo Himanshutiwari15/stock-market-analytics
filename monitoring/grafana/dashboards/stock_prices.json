@@ -1,0 +1,371 @@
+{
+  "__comment": "=================================================================",
+  "__comment2": "stock_prices.json — Grafana Dashboard Definition",
+  "__comment3": "HOW THIS FILE WORKS:",
+  "__comment4": "  Grafana reads this JSON and renders it as a dashboard.",
+  "__comment5": "  Each object in 'panels' is one chart or number on the screen.",
+  "__comment6": "  Each panel has 'targets' — SQL queries that fetch data.",
+  "__comment7": "  Grafana runs those queries against PostgreSQL and plots the results.",
+  "__comment8": "EDITING TIPS:",
+  "__comment9": "  - Edit visually in the Grafana UI, then export JSON (share icon → Export)",
+  "__comment10": "  - Or edit this file directly; Grafana reloads it within 30 seconds.",
+  "__comment11": "=================================================================",
+
+  "annotations": {
+    "list": []
+  },
+
+  "description": "Real-time stock prices — data collected by the ETL pipeline every 60 seconds",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+
+  "panels": [
+
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "AAPL — Apple",
+      "description": "Most recently fetched price. Updates every 60 seconds.",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "stock-postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "stock-postgres" },
+          "rawQuery": true,
+          "rawSql": "SELECT price FROM stock_prices WHERE symbol = 'AAPL' ORDER BY fetched_at DESC LIMIT 1",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue",  "value": null },
+              { "color": "green", "value": 100  },
+              { "color": "orange","value": 300  }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "text": { "titleSize": 14, "valueSize": 32 }
+      }
+    },
+
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "GOOGL — Alphabet",
+      "description": "Most recently fetched price. Updates every 60 seconds.",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "stock-postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "stock-postgres" },
+          "rawQuery": true,
+          "rawSql": "SELECT price FROM stock_prices WHERE symbol = 'GOOGL' ORDER BY fetched_at DESC LIMIT 1",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue",  "value": null },
+              { "color": "green", "value": 100  },
+              { "color": "orange","value": 300  }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "text": { "titleSize": 14, "valueSize": 32 }
+      }
+    },
+
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "MSFT — Microsoft",
+      "description": "Most recently fetched price. Updates every 60 seconds.",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "stock-postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "stock-postgres" },
+          "rawQuery": true,
+          "rawSql": "SELECT price FROM stock_prices WHERE symbol = 'MSFT' ORDER BY fetched_at DESC LIMIT 1",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue",  "value": null },
+              { "color": "green", "value": 100  },
+              { "color": "orange","value": 300  }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "text": { "titleSize": 14, "valueSize": 32 }
+      }
+    },
+
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "TSLA — Tesla",
+      "description": "Most recently fetched price. Updates every 60 seconds.",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "stock-postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "stock-postgres" },
+          "rawQuery": true,
+          "rawSql": "SELECT price FROM stock_prices WHERE symbol = 'TSLA' ORDER BY fetched_at DESC LIMIT 1",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue",  "value": null },
+              { "color": "green", "value": 100  },
+              { "color": "orange","value": 300  }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "text": { "titleSize": 14, "valueSize": 32 }
+      }
+    },
+
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Price History — All Stocks",
+      "description": "One data point per stock per pipeline run (every 60 seconds). Zoom in with your mouse, or change the time picker top-right.",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 5 },
+      "datasource": { "type": "postgres", "uid": "stock-postgres" },
+      "targets": [
+        {
+          "refId": "AAPL",
+          "datasource": { "type": "postgres", "uid": "stock-postgres" },
+          "rawQuery": true,
+          "rawSql": "SELECT fetched_at AS \"time\", price AS \"AAPL\" FROM stock_prices WHERE symbol = 'AAPL' AND $__timeFilter(fetched_at) ORDER BY fetched_at",
+          "format": "time_series"
+        },
+        {
+          "refId": "GOOGL",
+          "datasource": { "type": "postgres", "uid": "stock-postgres" },
+          "rawQuery": true,
+          "rawSql": "SELECT fetched_at AS \"time\", price AS \"GOOGL\" FROM stock_prices WHERE symbol = 'GOOGL' AND $__timeFilter(fetched_at) ORDER BY fetched_at",
+          "format": "time_series"
+        },
+        {
+          "refId": "MSFT",
+          "datasource": { "type": "postgres", "uid": "stock-postgres" },
+          "rawQuery": true,
+          "rawSql": "SELECT fetched_at AS \"time\", price AS \"MSFT\" FROM stock_prices WHERE symbol = 'MSFT' AND $__timeFilter(fetched_at) ORDER BY fetched_at",
+          "format": "time_series"
+        },
+        {
+          "refId": "TSLA",
+          "datasource": { "type": "postgres", "uid": "stock-postgres" },
+          "rawQuery": true,
+          "rawSql": "SELECT fetched_at AS \"time\", price AS \"TSLA\" FROM stock_prices WHERE symbol = 'TSLA' AND $__timeFilter(fetched_at) ORDER BY fetched_at",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "auto",
+            "pointSize": 5,
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "axisLabel": "Price (USD)",
+            "scaleDistribution": { "type": "linear" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [ { "color": "green", "value": null } ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "min", "max"]
+        }
+      }
+    },
+
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Latest Prices — Detail View",
+      "description": "The 20 most recent rows across all stocks. Useful for verifying the pipeline is inserting data.",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 17 },
+      "datasource": { "type": "postgres", "uid": "stock-postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "stock-postgres" },
+          "rawQuery": true,
+          "rawSql": "SELECT symbol, price, fetched_at FROM stock_prices ORDER BY fetched_at DESC LIMIT 20",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [ { "color": "green", "value": null } ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "price" },
+            "properties": [
+              { "id": "unit", "value": "currencyUSD" },
+              { "id": "decimals", "value": 4 },
+              { "id": "custom.displayMode", "value": "color-background-solid" },
+              { "id": "thresholds", "value": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 300 }
+                ]
+              }}
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "fetched_at" },
+            "properties": [
+              { "id": "unit", "value": "dateTimeAsIso" },
+              { "id": "displayName", "value": "Fetched At (UTC)" }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "fetched_at", "desc": true }],
+        "footer": {
+          "show": false,
+          "reducer": ["sum"],
+          "fields": ""
+        }
+      },
+      "transformations": []
+    }
+
+  ],
+
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["stocks", "etl", "portfolio"],
+
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": ["10s", "30s", "1m", "5m"],
+    "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d"]
+  },
+  "timezone": "browser",
+  "title": "Stock Market Analytics",
+  "uid": "stock-market-v1",
+  "version": 1
+}
