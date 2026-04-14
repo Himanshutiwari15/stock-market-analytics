@@ -33,7 +33,7 @@ DEPENDENCIES
 
 import logging
 import statistics
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session

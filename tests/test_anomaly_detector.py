@@ -35,9 +35,7 @@ Python follows the chain and eventually returns our fake list.
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
-import pytest
-
-from src.alerts.anomaly_detector import Anomaly, detect_anomalies
+from src.alerts.anomaly_detector import detect_anomalies
 from src.database.models import StockPrice
 
 

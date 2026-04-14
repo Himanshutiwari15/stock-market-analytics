@@ -119,7 +119,7 @@ def run_loop() -> None:
 
     while True:
         try:
-            run_once()
+            run_once()  # return value not used in loop mode
         except Exception as exc:
             # Log the error but DON'T crash the loop.
             # A transient DB outage or network error shouldn't kill the alerter.
@@ -149,7 +149,7 @@ def main() -> None:
 
     if args.once:
         logger.info("Running in ONE-SHOT mode.")
-        anomalies = run_once()
+        run_once()
         # Exit code 0 = success (even if no anomalies).
         # This is correct for CI/scheduled jobs: success means "ran cleanly".
         sys.exit(0)

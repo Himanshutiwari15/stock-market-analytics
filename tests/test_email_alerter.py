@@ -32,8 +32,6 @@ The mock records every method call so we can assert on them later.
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.alerts.anomaly_detector import Anomaly
 from src.alerts.email_alerter import send_alert_email
 
