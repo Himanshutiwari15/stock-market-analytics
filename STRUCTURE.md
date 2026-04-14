@@ -45,8 +45,9 @@ stock-market-analytics/
 ├── src/
 │   ├── alerts/
 │   │   ├── __init__.py
-│   │   ├── detector.py             # Watches for price spikes/drops beyond threshold
-│   │   └── notifier.py             # Sends email alerts via Gmail SMTP
+│   │   ├── anomaly_detector.py     # Z-score engine — flags prices > 2.5 std devs from mean
+│   │   ├── email_alerter.py        # Gmail SMTP via STARTTLS — sends HTML alert email
+│   │   └── runner.py               # Entry point: loop mode (Docker) or --once (manual)
 │   │
 │   ├── database/
 │   │   ├── __init__.py
@@ -75,8 +76,8 @@ stock-market-analytics/
 │   ├── test_fetcher.py             # Tests for the ingestion fetcher
 │   ├── test_database.py            # Tests for DB connection and models
 │   ├── test_pipeline.py            # Tests for ETL transform logic
-│   ├── test_detector.py            # Tests for anomaly detection logic
-│   └── test_notifier.py            # Tests for alert sending (with SMTP mocked)
+│   ├── test_anomaly_detector.py    # Tests for Z-score detection (spike, drop, edge cases)
+│   └── test_email_alerter.py       # Tests for SMTP flow (mocked — no real email sent)
 │
 ├── .bandit                         # Bandit security scanner configuration
 ├── .env                            # YOUR SECRETS — never committed to git

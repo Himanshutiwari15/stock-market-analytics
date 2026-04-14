@@ -95,7 +95,7 @@ Update this as we progress:
 - [x] Phase 9: Security scanning
 - [x] Phase 10: Terraform IaC (written — not applied, no AWS account yet; Option C later)
 - [x] Phase 11: Anomaly detection and email alerts
-- [ ] Phase 12: Final documentation and CV-ready README
+- [x] Phase 12: Final documentation and CV-ready README
 
 ---
 
