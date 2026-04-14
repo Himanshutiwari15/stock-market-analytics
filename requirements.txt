@@ -51,7 +51,7 @@ SQLAlchemy==2.0.30
 # --- HTTP ---
 # requests: the standard Python HTTP library.
 # Used for any direct API calls and health checks.
-requests==2.32.2
+requests==2.33.0
 
 # --- Pipeline scheduling ---
 # APScheduler: runs Python functions on a schedule (like cron, but in Python).
@@ -65,7 +65,7 @@ prometheus-client==0.20.0
 
 # --- Testing ---
 # pytest: the standard Python test runner.
-pytest==8.1.1
+pytest==9.0.3
 
 # pytest-mock: makes it easy to mock (fake) external dependencies in tests.
 # e.g., we mock the Yahoo Finance API so tests don't need internet access.
