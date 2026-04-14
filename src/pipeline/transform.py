@@ -30,8 +30,6 @@ IDEMPOTENCY:
 
 import logging
 from datetime import datetime, timezone
-from typing import Optional
-
 from src.database.models import StockPrice
 
 logger = logging.getLogger(__name__)

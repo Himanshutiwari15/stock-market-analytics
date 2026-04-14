@@ -25,7 +25,7 @@ The trade-off:
 from datetime import datetime, timezone, timedelta
 
 import pytest
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 
 from src.database.models import Base, StockPrice

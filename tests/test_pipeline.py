@@ -24,8 +24,6 @@ WHY mock the database in load tests?
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.database.models import StockPrice
 from src.pipeline.transform import transform, _validate_record
 from src.pipeline.load import load, LoadResult

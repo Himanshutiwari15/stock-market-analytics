@@ -30,8 +30,6 @@ STRUCTURE:
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.ingestion.fetcher import fetch_all_symbols, fetch_current_price
 
 

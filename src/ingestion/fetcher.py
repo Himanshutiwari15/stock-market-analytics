@@ -194,8 +194,6 @@ def fetch_all_symbols(symbols: Optional[list[str]] = None) -> list[dict]:
 # It does NOT run when the module is imported by other code.
 # This is called an "entry point guard" — a common Python pattern.
 if __name__ == "__main__":
-    import json
-
     print("\n" + "=" * 50)
     print("  Stock Price Fetcher — Live Test")
     print("=" * 50 + "\n")
