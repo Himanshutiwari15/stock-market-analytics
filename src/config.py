@@ -118,9 +118,33 @@ ALERT_RECIPIENT: str = _get_optional("ALERT_RECIPIENT", "")
 # Anomaly detection settings
 # -------------------------------------------------------
 
-# Alert if the price changes by more than this % in one interval.
-ANOMALY_THRESHOLD_PERCENT: float = float(
-    _get_optional("ANOMALY_THRESHOLD_PERCENT", "3.0")
+# Z-SCORE APPROACH (Phase 11)
+# ---------------------------
+# A Z-score measures how many standard deviations a value is
+# from the mean of a baseline dataset.
+#
+# Formula:  z = (current_price - mean) / std_dev
+#
+# z = 0   → exactly average
+# z = 1   → one standard deviation above average (~84th percentile)
+# z = 2   → two std devs above (~97.7th percentile)
+# z = 2.5 → our threshold: unusually extreme, worth alerting on
+# z = -2.5 → same on the downside (price crash)
+#
+# Why 2.5? In a normal distribution, only ~1.2% of values exceed
+# this threshold — so it keeps false positives low while catching
+# genuine spikes and crashes.
+
+# Number of days of historical price data to use as the baseline.
+# We compute mean + std dev over this window, then compare the
+# latest price against those statistics.
+ANOMALY_LOOKBACK_DAYS: int = int(
+    _get_optional("ANOMALY_LOOKBACK_DAYS", "20")
+)
+
+# Alert if |z-score| exceeds this value. Default: 2.5
+ANOMALY_Z_SCORE_THRESHOLD: float = float(
+    _get_optional("ANOMALY_Z_SCORE_THRESHOLD", "2.5")
 )
 
 # -------------------------------------------------------

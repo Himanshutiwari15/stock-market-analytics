@@ -93,8 +93,8 @@ Update this as we progress:
 - [x] Phase 7: Prometheus monitoring
 - [x] Phase 8: GitHub Actions CI/CD
 - [x] Phase 9: Security scanning
-- [ ] Phase 10: Terraform IaC (Optional — no AWS account yet)
-- [ ] Phase 11: Anomaly detection and email alerts
+- [x] Phase 10: Terraform IaC (written — not applied, no AWS account yet; Option C later)
+- [x] Phase 11: Anomaly detection and email alerts
 - [ ] Phase 12: Final documentation and CV-ready README
 
 ---

@@ -203,6 +203,58 @@ services:
       - stock_network
 
   # -----------------------------------------------------------
+  # Alerts (anomaly detection + email) — Phase 11
+  # -----------------------------------------------------------
+  # This service runs src/alerts/runner.py in an infinite loop.
+  # Every FETCH_INTERVAL_SECONDS it:
+  #   1. Queries the database for recent prices
+  #   2. Computes Z-scores for each symbol
+  #   3. Sends an email alert if any Z-score exceeds the threshold
+  #
+  # WHY a separate container?
+  #   Keeps ingestion (app) and alerting decoupled. If the alert
+  #   runner crashes, the data pipeline keeps collecting prices.
+  alerts:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: stock_alerts
+
+    # Must wait for Postgres to be ready (it reads price history from the DB).
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    # Override the default CMD from the Dockerfile to run the alert runner.
+    # `--once` would run one cycle and exit (good for manual testing).
+    # Without `--once` it loops forever — correct for the Docker service.
+    command: ["python", "-m", "src.alerts.runner"]
+
+    environment:
+      POSTGRES_HOST:             postgres
+      POSTGRES_PORT:             ${POSTGRES_PORT:-5432}
+      POSTGRES_DB:               ${POSTGRES_DB:-stockmarket}
+      POSTGRES_USER:             ${POSTGRES_USER:-stockuser}
+      POSTGRES_PASSWORD:         ${POSTGRES_PASSWORD}
+      STOCK_SYMBOLS:             ${STOCK_SYMBOLS:-AAPL,GOOGL,MSFT,TSLA}
+      FETCH_INTERVAL_SECONDS:    ${FETCH_INTERVAL_SECONDS:-60}
+      LOG_LEVEL:                 ${LOG_LEVEL:-INFO}
+      # Email alert credentials
+      SMTP_HOST:                 ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT:                 ${SMTP_PORT:-587}
+      SMTP_USER:                 ${SMTP_USER:-}
+      SMTP_PASSWORD:             ${SMTP_PASSWORD:-}
+      ALERT_RECIPIENT:           ${ALERT_RECIPIENT:-}
+      # Anomaly detection tuning
+      ANOMALY_Z_SCORE_THRESHOLD: ${ANOMALY_Z_SCORE_THRESHOLD:-2.5}
+      ANOMALY_LOOKBACK_DAYS:     ${ANOMALY_LOOKBACK_DAYS:-20}
+
+    restart: unless-stopped
+
+    networks:
+      - stock_network
+
+  # -----------------------------------------------------------
   # Prometheus (metrics scraper) — Phase 7
   # -----------------------------------------------------------
   prometheus:

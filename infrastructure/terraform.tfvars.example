@@ -1,0 +1,50 @@
+# =============================================================
+# terraform.tfvars.example — Example Variable Values
+# =============================================================
+# This file IS committed to git (like .env.example).
+# Copy it to terraform.tfvars and fill in your real values.
+# terraform.tfvars is git-ignored — it may contain secrets.
+#
+# HOW TO USE
+# -----------
+# cp terraform.tfvars.example terraform.tfvars
+# (then edit terraform.tfvars with your real values)
+#
+# Terraform automatically loads terraform.tfvars when you run
+# `terraform plan` or `terraform apply`.
+# =============================================================
+
+# Which AWS region to deploy into.
+# us-east-1 (N. Virginia) has the most free-tier eligible services.
+aws_region = "us-east-1"
+
+# "dev" for personal testing, "prod" for the real deployment.
+environment = "dev"
+
+# Your network address ranges — these defaults are fine.
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.101.0/24", "10.0.102.0/24"]
+
+# The name of your EC2 Key Pair (created in AWS Console → EC2 → Key Pairs).
+ec2_key_pair_name = "stock-analytics-keypair"
+
+# EC2 instance type — t2.micro is free-tier eligible.
+ec2_instance_type = "t2.micro"
+
+# Your home IP in CIDR format.
+# Find it at https://whatismyip.com, then add /32.
+# Example: "203.0.113.42/32"
+# WARNING: leaving this as 0.0.0.0/0 opens SSH to the entire internet.
+your_ip_cidr = "YOUR_IP_HERE/32"
+
+# RDS configuration
+db_instance_class    = "db.t3.micro"
+db_name              = "stockdb"
+db_username          = "stockadmin"
+db_allocated_storage = 20
+
+# db_password is intentionally omitted here.
+# Set it via an environment variable to avoid writing it to any file:
+#   export TF_VAR_db_password="your-strong-password-here"
+# Or add it to your private terraform.tfvars (never commit that file).
