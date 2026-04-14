@@ -7,34 +7,34 @@ Use it as a checklist before any deployment and when reviewing new code.
 
 ## Secrets Management
 
-- [ ] `.env` file is listed in `.gitignore` — **verify before every commit**
-- [ ] No secrets, passwords, API keys, or tokens in any `.py`, `.yml`, `.json`, or `.tf` file
-- [ ] `.env.example` contains only placeholder values (no real credentials)
-- [ ] GitHub Actions repository secrets are used for any CI/CD credentials
-- [ ] Docker environment variables are passed at container runtime, not baked into Docker images
-- [ ] Terraform variable files (`*.tfvars`) are in `.gitignore`
+- [x] `.env` file is listed in `.gitignore` — **verify before every commit**
+- [x] No secrets, passwords, API keys, or tokens in any `.py`, `.yml`, `.json`, or `.tf` file
+- [x] `.env.example` contains only placeholder values (no real credentials)
+- [ ] GitHub Actions repository secrets are used for any CI/CD credentials (N/A — no sensitive secrets needed in current CI)
+- [x] Docker environment variables are passed at container runtime, not baked into Docker images
+- [x] Terraform variable files (`*.tfvars`) are in `.gitignore`
 
 ## Authentication
 
-- [ ] PostgreSQL password is strong (not "changeme") and set via `POSTGRES_PASSWORD` env var
-- [ ] Grafana admin password is changed from default and set via `GF_SECURITY_ADMIN_PASSWORD`
-- [ ] Gmail SMTP uses an App Password, not the real account password
+- [x] PostgreSQL password is strong (not "changeme") and set via `POSTGRES_PASSWORD` env var
+- [x] Grafana admin password is changed from default and set via `GF_SECURITY_ADMIN_PASSWORD`
+- [ ] Gmail SMTP uses an App Password, not the real account password (Phase 11)
 - [ ] Default credentials on all services are changed before any public deployment
 
 ## Code Security (checked by Bandit)
 
-- [ ] All database queries use SQLAlchemy ORM or parameterized statements — no string-formatted SQL
-- [ ] Input data from Yahoo Finance API is validated before insertion into the database
-- [ ] No use of `eval()` or `exec()` with any external or user-supplied data
-- [ ] `bandit -r src/` passes with no HIGH or MEDIUM severity findings
-- [ ] No use of Python's `pickle` module with untrusted data (deserialization attack vector)
+- [x] All database queries use SQLAlchemy ORM or parameterized statements — no string-formatted SQL
+- [x] Input data from Yahoo Finance API is validated before insertion into the database
+- [x] No use of `eval()` or `exec()` with any external or user-supplied data
+- [x] `bandit -r src/` passes with no HIGH or MEDIUM severity findings
+- [x] No use of Python's `pickle` module with untrusted data (deserialization attack vector)
 
-## Dependencies (checked by Safety)
+## Dependencies (checked by pip-audit)
 
-- [ ] All dependencies pinned to exact versions in `requirements.txt`
-- [ ] `safety check -r requirements.txt` passes with no known CVEs
+- [x] All dependencies pinned to exact versions in `requirements.txt`
+- [x] `pip-audit -r requirements.txt` runs automatically in CI on every push
 - [ ] Dependency versions reviewed when adding new packages
-- [ ] Safety scan runs automatically in CI on every push
+- [ ] pip-audit passes with no known CVEs (update pinned versions if flagged)
 
 ## Network Security
 
@@ -122,10 +122,10 @@ These are the ones most relevant to this project:
 | A02 | Cryptographic Failures | No sensitive data stored; HTTPS in production |
 | A03 | Injection | Parameterized SQL queries throughout |
 | A05 | Security Misconfiguration | No default credentials; all services configured via env vars |
-| A06 | Vulnerable Components | `safety check` in CI catches known CVEs |
+| A06 | Vulnerable Components | `pip-audit` in CI catches known CVEs |
 | A09 | Security Logging | Pipeline logs errors; Prometheus tracks error rates |
 
 ---
 
-*Last reviewed: Phase 1 baseline*
+*Last reviewed: Phase 9 — bandit passes clean, pip-audit active in CI*
 *Next review: Before any production deployment*

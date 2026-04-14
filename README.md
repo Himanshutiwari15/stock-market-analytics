@@ -2,7 +2,7 @@
 
 > A production-grade data platform that ingests live stock market data, processes it through an ETL pipeline, stores it in PostgreSQL, and visualizes it on a live Grafana dashboard — fully containerized with Docker, monitored with Prometheus, and deployed via GitHub Actions CI/CD.
 
-[![CI](https://github.com/YOUR_USERNAME/stock-market-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/stock-market-analytics/actions)
+[![CI](https://github.com/Himanshutiwari15/stock-market-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/Himanshutiwari15/stock-market-analytics/actions)
 
 ---
 
@@ -59,7 +59,7 @@ Yahoo Finance API
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/stock-market-analytics.git
+git clone https://github.com/Himanshutiwari15/stock-market-analytics.git
 cd stock-market-analytics
 
 # 2. Set up your environment variables

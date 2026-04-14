@@ -81,6 +81,14 @@ ruff==0.4.1
 # e.g., hardcoded passwords, SQL injection patterns, use of assert for security.
 bandit[toml]==1.7.8
 
-# safety: checks your installed packages against a database of known CVEs.
-# CVE = Common Vulnerabilities and Exposures — published security flaws.
-safety==3.1.0
+# pip-audit: checks your installed packages against the OSV (Open Source
+# Vulnerabilities) database and PyPI's advisory database.
+# Maintained by the Python Packaging Authority (PyPA) — the same team
+# that maintains pip itself.
+# WHY pip-audit instead of safety?
+#   safety v3+ requires a free account and API key authentication.
+#   pip-audit is fully free, requires no authentication, and is the
+#   PyPA-recommended tool for dependency vulnerability scanning.
+# We use >= here (not ==) because security tools benefit from staying
+# current — newer versions have more comprehensive vulnerability data.
+pip-audit>=2.7.0

@@ -104,8 +104,10 @@ format:
 # -------------------------------------------------------
 
 # Run both security tools.
-# bandit: scans Python source code for vulnerabilities.
-# safety: checks dependencies for known CVEs.
+# bandit:    scans Python source code for vulnerabilities (hardcoded secrets,
+#            SQL injection patterns, use of insecure functions, etc.)
+# pip-audit: checks all dependencies against the OSV vulnerability database.
+#            Flags packages with known CVEs (Common Vulnerabilities and Exposures).
 security:
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "Running Bandit (Python code scanner)..."
@@ -113,9 +115,9 @@ security:
 	bandit -r src/ -c .bandit
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "Running Safety (dependency CVE check)..."
+	@echo "Running pip-audit (dependency CVE check)..."
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	safety check -r requirements.txt
+	pip-audit -r requirements.txt
 
 # -------------------------------------------------------
 # Cleanup

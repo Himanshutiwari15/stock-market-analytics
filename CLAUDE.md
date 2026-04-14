@@ -92,7 +92,7 @@ Update this as we progress:
 - [x] Phase 6: Grafana dashboard
 - [x] Phase 7: Prometheus monitoring
 - [x] Phase 8: GitHub Actions CI/CD
-- [ ] Phase 9: Security scanning
+- [x] Phase 9: Security scanning
 - [ ] Phase 10: Terraform IaC (Optional — no AWS account yet)
 - [ ] Phase 11: Anomaly detection and email alerts
 - [ ] Phase 12: Final documentation and CV-ready README

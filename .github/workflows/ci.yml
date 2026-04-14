@@ -146,21 +146,28 @@ jobs:
         run: pytest tests/ -v --tb=short
 
       # ---------------------------------------------------------
-      # Step 6: Security scan with bandit
+      # Step 6: Security scan — bandit (code) + pip-audit (deps)
       # ---------------------------------------------------------
-      # bandit scans Python source code for common vulnerabilities:
-      #   - Hardcoded passwords
-      #   - SQL injection patterns
-      #   - Use of insecure functions (eval, exec, pickle)
-      #   - Weak cryptography
-      # -r src/: scan the src/ directory recursively
-      # -c .bandit: use our project-specific bandit configuration
+      # TWO DIFFERENT SCANNERS — complementary, not redundant:
       #
-      # NOTE ON SAFETY (CVE checker):
-      #   safety==3.x requires a free account (safety auth login).
-      #   Running it in CI without credentials fails.
-      #   To add it later: create a free account at safety.pypa.io,
-      #   add SAFETY_API_KEY as a GitHub secret, then add:
-      #     run: safety scan -r requirements.txt --key ${{ secrets.SAFETY_API_KEY }}
-      - name: "Security — bandit"
+      # bandit — scans PYTHON SOURCE CODE for vulnerabilities:
+      #   - Hardcoded passwords or tokens
+      #   - SQL injection patterns (string-formatted queries)
+      #   - Dangerous function calls (eval, exec, pickle.loads)
+      #   - Weak cryptography (MD5, SHA1, insecure random)
+      #   -r src/: scan recursively
+      #   -c .bandit: our config (suppresses false positives with justification)
+      #
+      # pip-audit — scans INSTALLED PACKAGES against the OSV database:
+      #   - Flags packages with known CVEs (published vulnerabilities)
+      #   - Maintained by the Python Packaging Authority (PyPA)
+      #   - Free, no authentication required
+      #   -r requirements.txt: check only our declared dependencies
+      #
+      # Together: bandit catches what we WROTE wrong, pip-audit catches
+      # what our DEPENDENCIES got wrong.
+      - name: "Security — bandit (code scan)"
         run: bandit -r src/ -c .bandit
+
+      - name: "Security — pip-audit (dependency CVE scan)"
+        run: pip-audit -r requirements.txt
